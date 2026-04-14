@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BarberSys Pro - Gestão Total</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input, select, button { font-size: 16px !important; }
+        ::-webkit-scrollbar { display: none; }
+        .no-zoom { touch-action: manipulation; }
+    </style>
+</head>
+<body class="bg-zinc-900 text-zinc-100 pb-20 no-zoom">
+
+    <div class="max-w-md mx-auto p-4">
+        <header class="text-center py-6 border-b border-zinc-800 mb-6">
+            <h1 id="viewNomeBarbearia" class="text-4xl font-black text-amber-500 uppercase italic">BarberSys</h1>
+            <p id="viewDocEmpresa" class="text-zinc-500 text-[9px] font-bold mt-1 tracking-widest uppercase"></p>
+            <p id="viewBarbeiro" class="text-zinc-400 text-[10px] italic"></p>
+        </header>
+
+        <section id="areaCliente" class="bg-zinc-800 p-6 rounded-[2.5rem] border border-zinc-700 shadow-2xl mb-8">
+            <h2 class="text-[10px] font-black uppercase text-zinc-500 mb-4 text-center italic">Novo Agendamento</h2>
+            <div class="space-y-4">
+                <input type="text" id="cliente" placeholder="Seu Nome" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-5 text-white outline-none">
+                <input type="tel" id="telefone" placeholder="WhatsApp (Ex: 11999999999)" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-5 text-white outline-none">
+                
+                <select id="servico" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-5 text-white appearance-none font-bold">
+                    <option value="Corte" id="optCorte">Corte - R$ --</option>
+                    <option value="Barba" id="optBarba">Barba - R$ --</option>
+                    <option value="Combo" id="optCombo">Combo - R$ --</option>
+                </select>
+
+                <input type="date" id="dataAgendamento" onchange="window.gerarSlots()" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-5 text-white">
+
+                <div id="boxHorarios" class="hidden">
+                    <div id="gridHorarios" class="grid grid-cols-3 gap-2"></div>
+                </div>
+
+                <input type="hidden" id="horaSelecionada">
+                <button id="btnConfirmar" onclick="window.salvarAgendamento()" class="w-full bg-zinc-700 text-zinc-500 font-black py-6 rounded-2xl uppercase tracking-widest">
+                    Selecione uma data
+                </button>
+            </div>
+        </section>
+
+        <div class="text-center mb-10">
+            <button id="btnToggleAdmin" onclick="document.getElementById('formLogin').classList.toggle('hidden')" class="text-zinc-600 text-[10px] font-bold uppercase underline">Painel Administrativo</button>
+            <div id="formLogin" class="hidden mt-6 bg-zinc-800 p-6 rounded-[2rem] border border-zinc-700 text-left shadow-2xl">
+                <input type="email" id="email" placeholder="E-mail" class="w-full bg-zinc-900 p-4 rounded-2xl mb-2 border border-zinc-700">
+                <input type="password" id="senha" placeholder="Senha" class="w-full bg-zinc-900 p-4 rounded-2xl mb-4 border border-zinc-700">
+                <button onclick="window.loginAdmin()" class="w-full bg-amber-500 text-black py-4 rounded-2xl font-black uppercase">Entrar</button>
+            </div>
+        </div>
+
+        <div id="painelAdmin" class="hidden space-y-6">
+            
+            <div class="bg-blue-600/10 p-6 rounded-[2rem] border border-blue-600/50">
+                <h3 class="text-blue-400 font-black text-[10px] uppercase mb-4 text-center">Configurar Preços e Dados</h3>
+                <div class="space-y-3">
+                    <input type="text" id="setEmpresa" placeholder="Nome Barbearia" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-white">
+                    <input type="text" id="setDoc" placeholder="CNPJ/CPF" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-white">
+                    <input type="text" id="setBarbeiro" placeholder="Nome Barbeiro" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-white">
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="text-center"><label class="text-[8px] text-zinc-500 uppercase">Corte</label><input type="number" id="pCorte" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-green-500 font-bold text-center"></div>
+                        <div class="text-center"><label class="text-[8px] text-zinc-500 uppercase">Barba</label><input type="number" id="pBarba" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-green-500 font-bold text-center"></div>
+                        <div class="text-center"><label class="text-[8px] text-zinc-500 uppercase">Combo</label><input type="number" id="pCombo" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-green-500 font-bold text-center"></div>
+                    </div>
+                    <input type="password" id="chaveMestra" placeholder="Chave JMV para Salvar" class="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-700 text-xs text-white text-center">
+                    <button onclick="window.atualizarConfig()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-[10px] uppercase">Salvar Alterações</button>
+                </div>
+            </div>
+
+            <div class="bg-zinc-800 p-6 rounded-[2rem] border border-zinc-700">
+                <h3 class="text-zinc-500 font-black text-[10px] uppercase mb-4 text-center">Faturamento Acumulado</h3>
+                <div class="text-center">
+                    <span id="faturamentoGeral" class="text-green-500 font-black text-3xl">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="bg-zinc-800 p-6 rounded-[2.5rem] border border-zinc-700">
+                <h3 class="text-amber-500 font-black text-[10px] uppercase mb-6 text-center italic">Agenda de Clientes</h3>
+                <div id="listaGeral" class="space-y-3"></div>
+                <button onclick="window.logout()" class="w-full mt-10 text-red-500 text-[10px] font-bold underline uppercase">Sair do Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUwkrtdnDb7_j0Yhj-z-srBb1nsmXIOrM",
+            authDomain: "barbearia-vasconcelos.firebaseapp.com",
+            projectId: "barbearia-vasconcelos",
+            storageBucket: "barbearia-vasconcelos.firebasestorage.app",
+            messagingSenderId: "642432616778",
+            appId: "1:642432616778:web:f803e649f90cfeb32cd9b3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let configGlobal = { precos: { Corte: 0, Barba: 0, Combo: 0 } };
+
+        window.loginAdmin = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value).catch(() => alert("Acesso Negado!"));
+        window.logout = () => { signOut(auth); location.reload(); };
+
+        // 1. CARREGAMENTO DE CONFIGURAÇÕES E PREÇOS
+        onSnapshot(doc(db, "configuracoes", "admin"), (s) => {
+            let data = s.exists() ? s.data() : { 
+                nomeBarbearia: "BarberSys", 
+                precos: { Corte: 35, Barba: 15, Combo: 50 },
+                documento: "", nomeBarbeiro: "" 
+            };
+            configGlobal = data;
+            
+            document.getElementById('viewNomeBarbearia').innerText = data.nomeBarbearia;
+            document.getElementById('viewDocEmpresa').innerText = data.documento || "";
+            document.getElementById('viewBarbeiro').innerText = data.nomeBarbeiro ? `Profissional: ${data.nomeBarbeiro}` : "";
+            
+            document.getElementById('optCorte').innerText = `Corte - R$ ${data.precos.Corte}`;
+            document.getElementById('optBarba').innerText = `Barba - R$ ${data.precos.Barba}`;
+            document.getElementById('optCombo').innerText = `Combo - R$ ${data.precos.Combo}`;
+
+            if(document.getElementById('setEmpresa')) {
+                document.getElementById('setEmpresa').value = data.nomeBarbearia;
+                document.getElementById('setDoc').value = data.documento || "";
+                document.getElementById('setBarbeiro').value = data.nomeBarbeiro || "";
+                document.getElementById('pCorte').value = data.precos.Corte;
+                document.getElementById('pBarba').value = data.precos.Barba;
+                document.getElementById('pCombo').value = data.precos.Combo;
+            }
+        });
+
+        // 2. ATUALIZAR CONFIGS (ADMIN)
+        window.atualizarConfig = async () => {
+            if(document.getElementById('chaveMestra').value !== "JMV") return alert("Chave JMV Inválida!");
+            await setDoc(doc(db, "configuracoes", "admin"), {
+                nomeBarbearia: document.getElementById('setEmpresa').value,
+                documento: document.getElementById('setDoc').value,
+                nomeBarbeiro: document.getElementById('setBarbeiro').value,
+                precos: {
+                    Corte: parseFloat(document.getElementById('pCorte').value || 0),
+                    Barba: parseFloat(document.getElementById('pBarba').value || 0),
+                    Combo: parseFloat(document.getElementById('pCombo').value || 0)
+                }
+            }, { merge: true });
+            alert("Sistema Atualizado!");
+        };
+
+        // 3. LOGICA DE HORÁRIOS (SLOTS)
+        window.gerarSlots = async () => {
+            const data = document.getElementById('dataAgendamento').value;
+            if(!data) return;
+            const grid = document.getElementById('gridHorarios');
+            document.getElementById('boxHorarios').classList.remove('hidden');
+            grid.innerHTML = "<p class='col-span-3 text-center text-[10px] py-4 uppercase'>Carregando...</p>";
+
+            const snap = await getDocs(query(collection(db, "agendamentos"), where("dataSimplificada", "==", data)));
+            const ocupados = snap.docs.map(d => d.data().hora);
+            const slots = ["08:00", "08:40", "09:20", "10:00", "10:40", "11:20", "13:00", "13:40", "14:20", "15:00", "15:40", "16:20", "17:00", "17:40", "18:20", "19:00"];
+
+            grid.innerHTML = "";
+            slots.forEach(h => {
+                if(!ocupados.includes(h)) {
+                    const b = document.createElement('button');
+                    b.innerText = h;
+                    b.className = "bg-zinc-900 border border-zinc-700 p-4 rounded-2xl text-xs font-black active:bg-amber-500 transition-all";
+                    b.onclick = () => {
+                        document.querySelectorAll('#gridHorarios button').forEach(x => x.classList.remove('bg-amber-500','text-black'));
+                        b.classList.add('bg-amber-500','text-black');
+                        document.getElementById('horaSelecionada').value = h;
+                        document.getElementById('btnConfirmar').className = "w-full bg-green-600 text-white font-black py-6 rounded-2xl uppercase shadow-lg";
+                        document.getElementById('btnConfirmar').innerText = "AGENDAR " + h;
+                    };
+                    grid.appendChild(b);
+                }
+            });
+        };
+
+        // 4. SALVAR AGENDAMENTO
+        window.salvarAgendamento = async () => {
+            const h = document.getElementById('horaSelecionada').value;
+            const n = document.getElementById('cliente').value;
+            const s = document.getElementById('servico').value;
+            const d = document.getElementById('dataAgendamento').value;
+            const t = document.getElementById('telefone').value.replace(/\D/g, '');
+
+            if(!h || !n || !d) return alert("Preencha Nome, Data e Horário!");
+
+            await addDoc(collection(db, "agendamentos"), {
+                cliente: n, telefone: t, servico: s, dataSimplificada: d, hora: h,
+                preco: configGlobal.precos[s], criadoEm: new Date().toISOString()
+            });
+            alert("Sucesso! Agendado."); location.reload();
+        };
+
+        // 5. MONITORAMENTO DE LOGIN E AGENDA
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                document.getElementById('painelAdmin').classList.remove('hidden');
+                document.getElementById('areaCliente').classList.add('hidden');
+                document.getElementById('btnToggleAdmin').classList.add('hidden');
+                carregarAgendaAdmin();
+            } else {
+                document.getElementById('areaCliente').classList.remove('hidden');
+            }
+        });
+
+        function carregarAgendaAdmin() {
+            onSnapshot(query(collection(db, "agendamentos"), orderBy("dataSimplificada", "desc"), orderBy("hora", "asc")), (snap) => {
+                const lista = document.getElementById('listaGeral');
+                lista.innerHTML = "";
+                let fatTotal = 0;
+
+                if (snap.empty) {
+                    lista.innerHTML = "<p class='text-center text-zinc-600 text-[10px] py-10'>Agenda vazia</p>";
+                }
+
+                snap.forEach(s => {
+                    const ag = s.data();
+                    const id = s.id;
+                    fatTotal += parseFloat(ag.preco || 0);
+                    const dt = ag.dataSimplificada.split('-').reverse().join('/');
+
+                    const card = document.createElement('div');
+                    card.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center";
+                    card.innerHTML = `
+                        <div class="flex-1">
+                            <p class="text-amber-500 font-black text-xs uppercase">${dt} - ${ag.hora}</p>
+                            <p class="text-white font-bold text-sm uppercase leading-tight">${ag.cliente}</p>
+                            <p class="text-[9px] text-zinc-500 font-bold uppercase">${ag.servico} (R$ ${ag.preco})</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.open('https://wa.me/55${ag.telefone}')" class="bg-green-600/20 text-green-500 p-3 rounded-xl text-[10px] font-black">ZAP</button>
+                            <button onclick="window.excluirAgendamento('${id}')" class="bg-red-500/10 text-red-500 p-3 rounded-xl text-[10px] font-black">X</button>
+                        </div>
+                    `;
+                    lista.appendChild(card);
+                });
+                document.getElementById('faturamentoGeral').innerText = `R$ ${fatTotal.toFixed(2)}`;
+            });
+        }
+
+        window.excluirAgendamento = async (id) => {
+            if(confirm("Excluir agendamento?")) await deleteDoc(doc(db, "agendamentos", id));
+        };
+    </script>
+</body>
+</html>
